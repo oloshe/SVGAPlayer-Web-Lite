@@ -47,7 +47,7 @@ async function download (url: string, onDownloadProgress: ProgressCallback): Pro
 async function onmessage (event: { data: ParserPostMessageArgs }): Promise<void> {
   try {
     const { url, options } = event.data
-    const buffer = await download(url, (progress) => console.log(progress))
+    const buffer = await download(url, (progress) => worker.postMessage(progress))
     const dataHeader = new Uint8Array(buffer, 0, 4)
     if (Utils.getVersion(dataHeader) !== 2) throw new Error('this parser only support version@2 of SVGA.')
     const inflateData: Uint8Array = new Zlib.Inflate(new Uint8Array(buffer)).decompress()

@@ -1,4 +1,4 @@
-import { Video, MockWebWorker, ParserConfigOptions, ProgressCallback } from './types'
+import { Video, MockWebWorker, ParserConfigOptions, ProgressCallback, WebMessage } from './types'
 
 const INLINE_WORKER_FLAG = '#PARSER_V2_INLINE_WROKER#'
 
@@ -46,13 +46,13 @@ export class Parser {
       const { isDisableImageBitmapShim } = this
       const postData = { url, options: { isDisableImageBitmapShim } }
       if (this.worker instanceof Worker) {
-        this.worker.onmessage = ({ data }: { data: Video | Error }) => {
-          data instanceof Error ? reject(data) : resolve(data)
+        this.worker.onmessage = ({ data }: { data: WebMessage }) => {
+          data instanceof Error ? reject(data) : typeof data === 'number' ? this.onDownloadProgress?.(data) : resolve(data)
         }
         this.worker.postMessage(postData)
       } else {
-        this.worker.onmessageCallback = (data: Video | Error) => {
-          data instanceof Error ? reject(data) : resolve(data)
+        this.worker.onmessageCallback = (data: WebMessage) => {
+          data instanceof Error ? reject(data) : typeof data === 'number' ? this.onDownloadProgress?.(data) : resolve(data)
         }
         this.worker.onmessage({ data: postData })
       }

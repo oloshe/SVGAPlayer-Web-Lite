@@ -8,9 +8,10 @@ export interface MockWebWorker {
     onmessage: (event: {
         data: ParserPostMessageArgs;
     }) => void;
-    onmessageCallback: (data: Video | Error) => void;
-    postMessage: (data: Video | Error) => void;
+    onmessageCallback: (data: WebMessage) => void;
+    postMessage: (data: WebMessage) => void;
 }
+export type WebMessage = Video | Error | number;
 export interface ParserConfigOptions {
     /**
      * 是否取消使用 WebWorker，默认值 false
