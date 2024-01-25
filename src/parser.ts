@@ -8,14 +8,14 @@ const INLINE_WORKER_FLAG = '#PARSER_V2_INLINE_WROKER#'
 export class Parser {
   public worker: MockWebWorker | Worker
   private readonly isDisableImageBitmapShim: boolean = false
-  private onDownloadProgress?: ProgressCallback;
+  private readonly onDownloadProgress?: ProgressCallback
 
   constructor (options: ParserConfigOptions = {
     isDisableWebWorker: false,
     isDisableImageBitmapShim: false
   }) {
     const { isDisableWebWorker, isDisableImageBitmapShim, onDownloadProgress } = options
-    this.onDownloadProgress = onDownloadProgress;
+    this.onDownloadProgress = onDownloadProgress
     if (isDisableImageBitmapShim === true) {
       this.isDisableImageBitmapShim = isDisableImageBitmapShim
     }
@@ -47,12 +47,12 @@ export class Parser {
       const postData = { url, options: { isDisableImageBitmapShim } }
       if (this.worker instanceof Worker) {
         this.worker.onmessage = ({ data }: { data: Video | Error }) => {
-          data instanceof Error ? reject(data) : typeof data === 'number' ? this.onDownloadProgress?.(data): resolve(data)
+          data instanceof Error ? reject(data) : resolve(data)
         }
         this.worker.postMessage(postData)
       } else {
-        this.worker.onmessageCallback = (data: Video | number | Error) => {
-          data instanceof Error ? reject(data) : typeof data === 'number' ? this.onDownloadProgress?.(data) : resolve(data)
+        this.worker.onmessageCallback = (data: Video | Error) => {
+          data instanceof Error ? reject(data) : resolve(data)
         }
         this.worker.onmessage({ data: postData })
       }

@@ -30,7 +30,8 @@ async function download (url: string, onDownloadProgress: ProgressCallback): Pro
     request.open('GET', url, true)
     request.responseType = 'arraybuffer'
     request.onprogress = (e) => {
-      onDownloadProgress((e.loaded / e.total) * 100);
+      const progress = (e.loaded / e.total) * 100
+      onDownloadProgress(progress)
     }
     request.onloadend = () => {
       if (request.response !== undefined && (request.status === 200 || request.status === 304)) {
@@ -46,7 +47,7 @@ async function download (url: string, onDownloadProgress: ProgressCallback): Pro
 async function onmessage (event: { data: ParserPostMessageArgs }): Promise<void> {
   try {
     const { url, options } = event.data
-    const buffer = await download(url, (progress) => worker.postMessage(progress));
+    const buffer = await download(url, (progress) => console.log(progress))
     const dataHeader = new Uint8Array(buffer, 0, 4)
     if (Utils.getVersion(dataHeader) !== 2) throw new Error('this parser only support version@2 of SVGA.')
     const inflateData: Uint8Array = new Zlib.Inflate(new Uint8Array(buffer)).decompress()
@@ -63,7 +64,7 @@ async function onmessage (event: { data: ParserPostMessageArgs }): Promise<void>
     }
     worker.postMessage(new VideoEntity(movie, images))
   } catch (error) {
-    let errorMessage: string = (error as unknown as any).toString()
+    let errorMessage: string = (error as any).toString()
     if (error instanceof Error) errorMessage = error.message
     worker.postMessage(
       new Error(`[SVGA Parser Error] ${errorMessage}`)

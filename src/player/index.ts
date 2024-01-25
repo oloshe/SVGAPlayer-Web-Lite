@@ -153,7 +153,7 @@ export class Player {
           loadedCount++
           loadedCount === totalCount && resolve()
         }
-      }1
+      }
     })
   }
 

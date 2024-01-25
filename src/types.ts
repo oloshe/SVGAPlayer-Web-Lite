@@ -7,8 +7,8 @@ export interface ParserPostMessageArgs {
 
 export interface MockWebWorker {
   onmessage: (event: { data: ParserPostMessageArgs }) => void
-  onmessageCallback: (data: Video | number | Error) => void
-  postMessage: (data: Video | number | Error) => void
+  onmessageCallback: (data: Video | Error) => void
+  postMessage: (data: Video | Error) => void
 }
 
 export interface ParserConfigOptions {
@@ -20,7 +20,7 @@ export interface ParserConfigOptions {
    * 是否取消使用 ImageBitmap 垫片，默认值 false
    */
   isDisableImageBitmapShim?: boolean
-  onDownloadProgress?: ProgressCallback;
+  onDownloadProgress?: ProgressCallback
 }
 
 export interface RawImages {
@@ -305,4 +305,4 @@ export interface PlayerConfig {
 
 export type PlayerConfigOptions = Partial<PlayerConfig>
 
-export type ProgressCallback = (progress: number) => void;
+export type ProgressCallback = (progress: number) => void
