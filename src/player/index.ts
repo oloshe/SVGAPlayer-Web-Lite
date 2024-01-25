@@ -153,7 +153,7 @@ export class Player {
           loadedCount++
           loadedCount === totalCount && resolve()
         }
-      }
+      }1
     })
   }
 
@@ -270,7 +270,7 @@ export class Player {
 
     this.animator.duration = frames * (1.0 / videoEntity.fps) * 1000
     this.animator.loopStart = loopStartFrame > startFrame ? (loopStartFrame - startFrame) * (1.0 / videoEntity.fps) * 1000 : 0
-    this.animator.loop = loop === true || loop <= 0 ? Infinity : (loop === false ? 1 : loop)
+    this.animator.loop = loop === true || (loop as number) <= 0 ? Infinity : (loop === false ? 1 : loop)
     this.animator.fillRule = fillMode === 'backwards' ? 1 : 0
 
     this.animator.onUpdate = (value: number) => {

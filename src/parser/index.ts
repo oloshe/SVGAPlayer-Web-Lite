@@ -2,6 +2,7 @@ import {
   MockWebWorker,
   Movie,
   ParserPostMessageArgs,
+  ProgressCallback,
   RawImages
 } from '../types'
 import { Root } from 'protobufjs'
@@ -23,11 +24,14 @@ const message = proto.lookupType('com.opensource.svga.MovieEntity')
 
 let worker: MockWebWorker | Worker
 
-async function download (url: string): Promise<ArrayBuffer> {
+async function download (url: string, onDownloadProgress: ProgressCallback): Promise<ArrayBuffer> {
   return await new Promise((resolve, reject) => {
     const request = new XMLHttpRequest()
     request.open('GET', url, true)
     request.responseType = 'arraybuffer'
+    request.onprogress = (e) => {
+      onDownloadProgress((e.loaded / e.total) * 100);
+    }
     request.onloadend = () => {
       if (request.response !== undefined && (request.status === 200 || request.status === 304)) {
         resolve(request.response)
@@ -42,7 +46,7 @@ async function download (url: string): Promise<ArrayBuffer> {
 async function onmessage (event: { data: ParserPostMessageArgs }): Promise<void> {
   try {
     const { url, options } = event.data
-    const buffer = await download(url)
+    const buffer = await download(url, (progress) => worker.postMessage(progress));
     const dataHeader = new Uint8Array(buffer, 0, 4)
     if (Utils.getVersion(dataHeader) !== 2) throw new Error('this parser only support version@2 of SVGA.')
     const inflateData: Uint8Array = new Zlib.Inflate(new Uint8Array(buffer)).decompress()

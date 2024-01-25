@@ -1,13 +1,15 @@
 import serve from 'rollup-plugin-serve'
 import livereload from 'rollup-plugin-livereload'
 import { terser } from 'rollup-plugin-terser'
-import banner from 'rollup-plugin-banner'
+import _banner from 'rollup-plugin-banner'
 import { getBabelOutputPlugin } from '@rollup/plugin-babel'
 import typescript from 'rollup-plugin-typescript2'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
-import { inlineParser } from './scripts/plugins'
+import { inlineParser } from './scripts/plugins.mjs'
 
+const banner = _banner.default
+console.log(banner)
 const FORMAT = process.env.FORMAT
 const IS_TEST_ENV = process.env.NODE_ENV === 'test'
 const DIST_FILE_NAME = 'index'
