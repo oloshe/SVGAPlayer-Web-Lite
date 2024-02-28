@@ -47,7 +47,7 @@ export class Player {
     isOpenNoExecutionDelay: false
   }
 
-  private readonly animator: Animator
+  private readonly animator: Animator | null
   private readonly ofsCanvas: HTMLCanvasElement | OffscreenCanvas
 
   private isBeIntersection = true
@@ -91,7 +91,7 @@ export class Player {
     this.config.isCacheFrames = options.isCacheFrames ?? false
     this.config.isUseIntersectionObserver = options.isUseIntersectionObserver ?? false
     this.config.isOpenNoExecutionDelay = options.isOpenNoExecutionDelay ?? false
-    this.animator.isOpenNoExecutionDelay = options.isOpenNoExecutionDelay ?? false
+    this.animator && (this.animator.isOpenNoExecutionDelay = options.isOpenNoExecutionDelay ?? false)
     // 监听容器是否处于浏览器视窗内
     this.setIntersectionObserver()
   }
@@ -209,7 +209,7 @@ export class Player {
    * 暂停播放
    */
   public pause (): void {
-    this.animator.stop()
+    this.animator?.stop()
     if (this.onPause !== undefined) this.onPause()
   }
 
@@ -217,7 +217,7 @@ export class Player {
    * 停止播放
    */
   public stop (): void {
-    this.animator.stop()
+    this.animator?.stop()
     this.currentFrame = 0
     this.clearContainer()
     if (this.onStop !== undefined) this.onStop()
@@ -234,7 +234,7 @@ export class Player {
    * 销毁实例
    */
   public destroy (): void {
-    this.animator.stop()
+    this.animator?.stop()
     this.clearContainer()
     ;(this.animator as any) = null
     ;(this.videoEntity as any) = null
@@ -242,6 +242,7 @@ export class Player {
 
   private startAnimation (): void {
     if (this.videoEntity === undefined) throw new Error('videoEntity undefined')
+    if (!this.animator) return
 
     const { config, totalFrames, videoEntity } = this
     const { playMode, startFrame, endFrame, loopStartFrame, fillMode, loop } = config
