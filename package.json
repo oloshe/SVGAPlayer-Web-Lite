@@ -1,5 +1,5 @@
 {
-  "name": "svga",
+  "name": "@jacob/svga",
   "version": "2.1.1",
   "description": "Lightweight SVGA Web Player",
   "main": "dist/index.cjs.min.js",
