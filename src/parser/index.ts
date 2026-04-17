@@ -54,6 +54,7 @@ async function onmessage (event: { data: ParserPostMessageArgs }): Promise<void>
     const movie = message.decode(inflateData) as unknown as Movie
     const images: RawImages = {}
     for (const key in movie.images) {
+      if (key.startsWith('audio')) continue
       const image = movie.images[key]
       if (!options.isDisableImageBitmapShim && self.createImageBitmap !== undefined) {
         images[key] = await self.createImageBitmap(new Blob([image]))
