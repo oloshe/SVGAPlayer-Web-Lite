@@ -3,7 +3,7 @@ import livereload from 'rollup-plugin-livereload'
 import { terser } from 'rollup-plugin-terser'
 import _banner from 'rollup-plugin-banner'
 import { getBabelOutputPlugin } from '@rollup/plugin-babel'
-import typescript from 'rollup-plugin-typescript2'
+import ts from 'typescript'
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import { inlineParser } from './scripts/plugins.mjs'
@@ -16,6 +16,74 @@ const DIST_FILE_NAME = 'index'
 const TEST_DIR = '__test__'
 const DIST_DIR = 'dist'
 const UMD_NAME = 'SVGA'
+const RESOLVE_EXTENSIONS = ['.mjs', '.js', '.json', '.node', '.ts']
+let hasEmittedDeclarations = false
+
+function loadTSConfig (tsconfig) {
+  const configFile = ts.readConfigFile(tsconfig, ts.sys.readFile)
+  if (configFile.error !== undefined) {
+    throw new Error(ts.flattenDiagnosticMessageText(configFile.error.messageText, '\n'))
+  }
+  return ts.parseJsonConfigFileContent(configFile.config, ts.sys, process.cwd())
+}
+
+function reportTSDiagnostics (diagnostics) {
+  const errors = diagnostics.filter(diagnostic => diagnostic.category === ts.DiagnosticCategory.Error)
+  if (errors.length === 0) return
+  const message = ts.formatDiagnosticsWithColorAndContext(errors, {
+    getCanonicalFileName: fileName => fileName,
+    getCurrentDirectory: () => process.cwd(),
+    getNewLine: () => '\n'
+  })
+  throw new Error(message)
+}
+
+function emitDeclarations (tsconfig) {
+  if (IS_TEST_ENV || hasEmittedDeclarations) return
+  hasEmittedDeclarations = true
+  const parsedConfig = loadTSConfig(tsconfig)
+  const options = {
+    ...parsedConfig.options,
+    declaration: true,
+    emitDeclarationOnly: true,
+    outDir: DIST_DIR,
+    noEmit: false
+  }
+  const program = ts.createProgram(parsedConfig.fileNames, options)
+  const emitResult = program.emit()
+  reportTSDiagnostics(ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics))
+}
+
+function typescript (options) {
+  const parsedConfig = loadTSConfig(options.tsconfig)
+  const compilerOptions = {
+    ...parsedConfig.options,
+    declaration: false,
+    noEmit: false,
+    sourceMap: false,
+    module: ts.ModuleKind.ESNext
+  }
+
+  return {
+    name: 'typescript-transpile',
+    buildStart () {
+      emitDeclarations(options.tsconfig)
+    },
+    transform (code, id) {
+      if (!/\.[cm]?tsx?$/.test(id)) return null
+      const result = ts.transpileModule(code, {
+        fileName: id,
+        compilerOptions,
+        reportDiagnostics: true
+      })
+      reportTSDiagnostics(result.diagnostics ?? [])
+      return {
+        code: result.outputText,
+        map: null
+      }
+    }
+  }
+}
 
 const babelOutputPlugin = getBabelOutputPlugin({
   allowAllFormats: true,
@@ -46,7 +114,7 @@ const config = [
       sourcemap: false
     },
     plugins: [
-      resolve({ jsnext: true, preferBuiltins: true, browser: true }),
+      resolve({ jsnext: true, preferBuiltins: true, browser: true, extensions: RESOLVE_EXTENSIONS }),
       commonjs(),
       typescript({
         tsconfig: IS_TEST_ENV ? 'tsconfig.test.json' : 'tsconfig.json'
@@ -74,7 +142,7 @@ if (IS_TEST_ENV || FORMAT === 'umd') {
       format: 'iife'
     },
     plugins: [
-      resolve({ jsnext: true, preferBuiltins: true, browser: true }),
+      resolve({ jsnext: true, preferBuiltins: true, browser: true, extensions: RESOLVE_EXTENSIONS }),
       commonjs(),
       typescript({
         tsconfig: IS_TEST_ENV ? 'tsconfig.test.json' : 'tsconfig.json'

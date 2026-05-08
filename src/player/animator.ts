@@ -5,6 +5,7 @@ export class Animator {
   private startTime = 0
   private currentFrication: number = 0.0
   private worker: Worker | null = null
+  private readonly boundDoFrame = (): void => this.doFrame()
   public isOpenNoExecutionDelay = false
   public startValue: number = 0
   public endValue: number = 0
@@ -28,7 +29,9 @@ export class Animator {
     this.startTime = this.currentTimeMillsecond()
     this.currentFrication = 0.0
     if (this.isOpenNoExecutionDelay && this.worker === null) {
-      this.worker = new Worker(window.URL.createObjectURL(new Blob([WORKER])))
+      const workerURL = window.URL.createObjectURL(new Blob([WORKER]))
+      this.worker = new Worker(workerURL)
+      window.URL.revokeObjectURL(workerURL)
     }
     this.onStart()
     this.doFrame()
@@ -51,10 +54,10 @@ export class Animator {
       this.doDeltaTime(this.currentTimeMillsecond() - this.startTime)
       if (this.isRunning) {
         if (this.worker !== null) {
-          this.worker.onmessage = this.doFrame.bind(this)
+          this.worker.onmessage = this.boundDoFrame
           this.worker.postMessage(null)
         } else {
-          window.requestAnimationFrame(this.doFrame.bind(this))
+          window.requestAnimationFrame(this.boundDoFrame)
         }
       }
     }

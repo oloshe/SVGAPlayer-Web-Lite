@@ -54,6 +54,8 @@ export class Player {
   private intersectionObserver: IntersectionObserver | null = null
   private bitmapsCache: BitmapsCache = {}
   private readonly cacheFrames: { [key: string]: HTMLImageElement | ImageBitmap} = {}
+  private canvasContext: CanvasRenderingContext2D | null = null
+  private contextContainer: HTMLCanvasElement | null = null
 
   constructor (options: HTMLCanvasElement | PlayerConfigOptions) {
     this.animator = new Animator()
@@ -81,6 +83,10 @@ export class Player {
         throw new Error('StartFrame should > EndFrame')
       }
     }
+    if (options.container !== undefined && options.container !== this.config.container) {
+      this.canvasContext = null
+      this.contextContainer = null
+    }
     this.config.container = options.container ?? this.config.container
     this.config.loop = options.loop ?? 0
     this.config.fillMode = options.fillMode ?? PLAYER_FILL_MODE.FORWARDS
@@ -97,6 +103,10 @@ export class Player {
   }
 
   private setIntersectionObserver (): void {
+    if (this.intersectionObserver !== null) {
+      this.intersectionObserver.disconnect()
+      this.intersectionObserver = null
+    }
     if (hasIntersectionObserver && this.config.isUseIntersectionObserver) {
       this.intersectionObserver = new IntersectionObserver(entries => {
         this.isBeIntersection = !(entries[0].intersectionRatio <= 0)
@@ -106,7 +116,6 @@ export class Player {
       })
       this.intersectionObserver.observe(this.config.container)
     } else {
-      if (this.intersectionObserver !== null) this.intersectionObserver.disconnect()
       this.config.isUseIntersectionObserver = false
       this.isBeIntersection = true
     }
@@ -123,6 +132,7 @@ export class Player {
       this.totalFrames = videoEntity.frames - 1
       this.videoEntity = videoEntity
       this.clearContainer()
+      this.clearFrameCache()
       this.setSize()
       // base64 -> imageelement
       this.bitmapsCache = {}
@@ -141,12 +151,13 @@ export class Player {
         if (typeof image === 'string') {
           totalCount++
           const img = document.createElement('img')
-          img.src = 'data:image/png;base64,' + image
           this.bitmapsCache[key] = img
           img.onload = () => {
             loadedCount++
             loadedCount === totalCount && resolve()
           }
+          img.onerror = () => reject(new Error(`Image load failed: ${key}`))
+          img.src = 'data:image/png;base64,' + image
         } else {
           this.bitmapsCache[key] = image
           totalCount++
@@ -235,9 +246,25 @@ export class Player {
    */
   public destroy (): void {
     this.animator?.stop()
+    if (this.intersectionObserver !== null) {
+      this.intersectionObserver.disconnect()
+      this.intersectionObserver = null
+    }
     this.clearContainer()
+    this.clearFrameCache()
+    this.bitmapsCache = {}
     ;(this.animator as any) = null
     ;(this.videoEntity as any) = null
+    this.canvasContext = null
+    this.contextContainer = null
+  }
+
+  private clearFrameCache (): void {
+    for (const key in this.cacheFrames) {
+      const frame = this.cacheFrames[key]
+      if ('close' in frame) frame.close()
+      delete this.cacheFrames[key]
+    }
   }
 
   private startAnimation (): void {
@@ -298,7 +325,11 @@ export class Player {
 
     this.clearContainer()
 
-    const context = this.config.container.getContext('2d')
+    if (this.canvasContext === null || this.contextContainer !== this.config.container) {
+      this.canvasContext = this.config.container.getContext('2d')
+      this.contextContainer = this.config.container
+    }
+    const context = this.canvasContext
     if (context === null) throw new Error('Canvas Context cannot be null')
 
     if (this.config.isCacheFrames && this.cacheFrames[frame] !== undefined) {

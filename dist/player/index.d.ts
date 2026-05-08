@@ -26,6 +26,8 @@ export declare class Player {
     private intersectionObserver;
     private bitmapsCache;
     private readonly cacheFrames;
+    private canvasContext;
+    private contextContainer;
     constructor(options: HTMLCanvasElement | PlayerConfigOptions);
     /**
      * 设置配置项
@@ -88,6 +90,7 @@ export declare class Player {
      * 销毁实例
      */
     destroy(): void;
+    private clearFrameCache;
     private startAnimation;
     private setSize;
     private drawFrame;

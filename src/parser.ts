@@ -25,7 +25,9 @@ export class Parser {
       if (window.SVGAParserMockWorker === undefined) throw new Error('SVGAParserMockWorker undefined')
       this.worker = window.SVGAParserMockWorker
     } else {
-      this.worker = new Worker(window.URL.createObjectURL(new Blob([INLINE_WORKER_FLAG])))
+      const workerURL = window.URL.createObjectURL(new Blob([INLINE_WORKER_FLAG]))
+      this.worker = new Worker(workerURL)
+      window.URL.revokeObjectURL(workerURL)
     }
   }
 

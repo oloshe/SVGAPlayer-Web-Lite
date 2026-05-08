@@ -22,6 +22,17 @@ interface CurrentPoint {
   y2: number
 }
 
+interface BezierSegment {
+  method: string
+  args: string[]
+}
+
+interface PathLike {
+  d?: string
+  __svgaParsedD?: string
+  __svgaParsedSegments?: BezierSegment[]
+}
+
 const validMethods = 'MLHVCSQRZmlhvcsqrz'
 
 function render (
@@ -71,7 +82,7 @@ function drawSprite (
 
   if (bitmap !== undefined) {
     if (frame.maskPath !== null) {
-      drawBezier(context, frame.maskPath.d, frame.maskPath.transform, frame.maskPath.styles)
+      drawBezier(context, frame.maskPath, frame.maskPath.transform, frame.maskPath.styles)
       context.clip()
     }
     if (replaceElement !== undefined) {
@@ -98,7 +109,7 @@ function drawShape (
     case SHAPE_TYPE.SHAPE:
       drawBezier(
         context,
-        shape.path.d,
+        shape.path,
         shape.transform,
         shape.styles
       )
@@ -152,12 +163,12 @@ function resetShapeStyles (
     context.fillStyle = 'transparent'
   }
 
-  if (styles.lineDash !== null) context.setLineDash(styles.lineDash)
+  context.setLineDash(styles.lineDash ?? [])
 }
 
 function drawBezier (
   context: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  d: string | undefined,
+  path: PathLike | undefined,
   transform: Transform | undefined,
   styles: VideoStyles
 ): void {
@@ -175,15 +186,10 @@ function drawBezier (
   }
   const currentPoint: CurrentPoint = { x: 0, y: 0, x1: 0, y1: 0, x2: 0, y2: 0 }
   context.beginPath()
-  if (d !== undefined) {
-    d = d.replace(/([a-zA-Z])/g, '|||$1 ').replace(/,/g, ' ')
-    d.split('|||').forEach(segment => {
-      if (segment.length === 0) return
-      const firstLetter = segment.substr(0, 1)
-      if (validMethods.includes(firstLetter)) {
-        const args = segment.substr(1).trim().split(' ')
-        drawBezierElement(context, currentPoint, firstLetter, args)
-      }
+  const segments = getBezierSegments(path)
+  if (segments !== undefined) {
+    segments.forEach(segment => {
+      drawBezierElement(context, currentPoint, segment.method, segment.args)
     })
   }
   if (styles.fill !== null) {
@@ -193,6 +199,27 @@ function drawBezier (
     context.stroke()
   }
   context.restore()
+}
+
+function getBezierSegments (path: PathLike | undefined): BezierSegment[] | undefined {
+  if (path === undefined || path.d === undefined) return undefined
+  if (path.__svgaParsedD === path.d) return path.__svgaParsedSegments
+
+  const segments: BezierSegment[] = []
+  const normalizedPath = path.d.replace(/([a-zA-Z])/g, '|||$1 ').replace(/,/g, ' ')
+  normalizedPath.split('|||').forEach(segment => {
+    if (segment.length === 0) return
+    const firstLetter = segment.substr(0, 1)
+    if (validMethods.includes(firstLetter)) {
+      segments.push({
+        method: firstLetter,
+        args: segment.substr(1).trim().split(' ')
+      })
+    }
+  })
+  path.__svgaParsedD = path.d
+  path.__svgaParsedSegments = segments
+  return segments
 }
 
 function drawBezierElement (

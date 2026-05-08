@@ -3,6 +3,7 @@ export declare class Animator {
     private startTime;
     private currentFrication;
     private worker;
+    private readonly boundDoFrame;
     isOpenNoExecutionDelay: boolean;
     startValue: number;
     endValue: number;

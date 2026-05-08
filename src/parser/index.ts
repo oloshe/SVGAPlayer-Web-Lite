@@ -30,8 +30,10 @@ async function download (url: string, onDownloadProgress: ProgressCallback): Pro
     request.open('GET', url, true)
     request.responseType = 'arraybuffer'
     request.onprogress = (e) => {
-      const progress = (e.loaded / e.total) * 100
-      onDownloadProgress(progress)
+      if (e.lengthComputable && e.total > 0) {
+        const progress = (e.loaded / e.total) * 100
+        onDownloadProgress(progress)
+      }
     }
     request.onloadend = () => {
       if (request.response !== undefined && (request.status === 200 || request.status === 304)) {
