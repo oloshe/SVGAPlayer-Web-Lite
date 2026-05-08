@@ -1,6 +1,6 @@
 {
   "name": "@jacob/svga",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Lightweight SVGA Web Player",
   "main": "dist/index.cjs.min.js",
   "module": "dist/index.esm.min.js",
@@ -44,6 +44,7 @@
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^19.0.0",
     "@rollup/plugin-node-resolve": "^13.0.0",
+    "@rollup/plugin-typescript": "^12.3.0",
     "@typescript-eslint/eslint-plugin": "^4.28.1",
     "cross-env": "^5.2.0",
     "eslint": "^7.27.0",
@@ -63,7 +64,6 @@
     "rollup-plugin-livereload": "^1.0.1",
     "rollup-plugin-serve": "1.1.1",
     "rollup-plugin-terser": "^5.1.1",
-    "rollup-plugin-typescript2": "0.36.0",
     "tslib": "^2.3.0",
     "typescript": "^4.9.4",
     "yorkie": "^2.0.0",
