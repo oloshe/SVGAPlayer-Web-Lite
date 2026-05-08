@@ -1,5 +1,5 @@
 {
-  "name": "@jacob/svga",
+  "name": "oloshe-svga",
   "version": "2.1.2",
   "description": "Lightweight SVGA Web Player",
   "main": "dist/index.cjs.min.js",
@@ -13,12 +13,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/svga/SVGAPlayer-Web-Lite"
+    "url": "git+https://github.com/oloshe/SVGAPlayer-Web-Lite.git"
   },
   "bugs": {
-    "url": "https://github.com/svga/SVGAPlayer-Web-Lite/issues"
+    "url": "https://github.com/oloshe/SVGAPlayer-Web-Lite/issues"
   },
-  "homepage": "https://github.com/svga/SVGAPlayer-Web-Lite/#readme",
+  "homepage": "https://github.com/oloshe/SVGAPlayer-Web-Lite/#readme",
   "scripts": {
     "format:check": "eslint",
     "type:check": "tsc --noEmit",
